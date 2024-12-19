@@ -1,0 +1,153 @@
+# Cloud Armor Security Policies Configuration
+# Version: 1.0
+# Purpose: Define WAF policies and security rules for the Pharmaceutical Data Pipeline Platform
+
+security_policies:
+  - name: api-protection-policy
+    description: "WAF policy for protecting API endpoints and web services"
+    
+    # Adaptive Protection Configuration for DDoS Defense
+    adaptive_protection_config:
+      layer_7_ddos_defense_config:
+        enable: true
+        rule_visibility: STANDARD
+      
+    rules:
+      # Allow Internal GCP Traffic
+      - priority: 1000
+        description: "Allow internal GCP traffic"
+        action: allow
+        preview: false
+        match:
+          config:
+            src_ip_ranges:
+              - "10.0.0.0/8"    # Private network range
+              - "172.16.0.0/12" # Private network range
+              - "192.168.0.0/16" # Private network range
+          versioned_expr: SRC_IPS_V1
+          
+      # Rate Limiting Rules
+      - priority: 2000
+        description: "Global rate limiting for API endpoints"
+        action: rate_based_ban
+        preview: false
+        rate_limit_options:
+          enforce_on_key: IP_ADDRESS
+          rate_limit_threshold:
+            count: 100
+            interval_sec: 60
+        match:
+          expr:
+            expression: "request.path.matches('/api/v1/*')"
+            
+      # API-Specific Rate Limits
+      - priority: 2100
+        description: "Rate limiting for scraping endpoints"
+        action: rate_based_ban
+        preview: false
+        rate_limit_options:
+          enforce_on_key: IP_ADDRESS
+          rate_limit_threshold:
+            count: 30
+            interval_sec: 60
+        match:
+          expr:
+            expression: "request.path.matches('/api/v1/scrape')"
+            
+      - priority: 2200
+        description: "Rate limiting for document endpoints"
+        action: rate_based_ban
+        preview: false
+        rate_limit_options:
+          enforce_on_key: IP_ADDRESS
+          rate_limit_threshold:
+            count: 50
+            interval_sec: 60
+        match:
+          expr:
+            expression: "request.path.matches('/api/v1/documents')"
+            
+      # SQL Injection Protection
+      - priority: 3000
+        description: "Block SQL injection attempts"
+        action: deny(403)
+        preview: false
+        match:
+          expr:
+            expression: "evaluatePreconfiguredExpr('sqli-v33-stable')"
+            
+      # XSS Protection
+      - priority: 3100
+        description: "Block cross-site scripting attempts"
+        action: deny(403)
+        preview: false
+        match:
+          expr:
+            expression: "evaluatePreconfiguredExpr('xss-v33-stable')"
+            
+      # OWASP Top 10 Protection
+      - priority: 3200
+        description: "Block OWASP Top 10 attacks"
+        action: deny(403)
+        preview: false
+        match:
+          expr:
+            expression: "evaluatePreconfiguredExpr('crs-v2022')"
+            
+      # Geolocation Blocking (if needed)
+      - priority: 4000
+        description: "Geo-based access control"
+        action: allow
+        preview: false
+        match:
+          expr:
+            expression: "origin.region_code == 'US' || origin.region_code == 'CA'"
+            
+      # Allow Cloud Run Services
+      - priority: 5000
+        description: "Allow Cloud Run service traffic"
+        action: allow
+        preview: false
+        match:
+          config:
+            src_ip_ranges:
+              - "35.191.0.0/16"  # Google Cloud Run
+              - "130.211.0.0/22" # Google Cloud Load Balancer
+          versioned_expr: SRC_IPS_V1
+          
+      # Default Deny Rule
+      - priority: 2147483647
+        description: "Default deny rule"
+        action: deny(403)
+        preview: false
+        match:
+          versioned_expr: SRC_IPS_V1
+          config:
+            src_ip_ranges:
+              - "*"
+
+# Security Policy Configuration
+policy_config:
+  # Default security level
+  security_level: STANDARD
+  
+  # Advanced options
+  advanced_options_config:
+    json_parsing: true
+    log_level: VERBOSE
+    
+  # Custom headers
+  custom_headers:
+    - name: X-Frame-Options
+      value: DENY
+    - name: X-Content-Type-Options
+      value: nosniff
+    - name: Strict-Transport-Security
+      value: "max-age=31536000; includeSubDomains"
+
+# Logging Configuration
+logging_config:
+  enable_logging: true
+  sample_rate: 1.0
+  include_request_headers: true
+  include_response_headers: false
