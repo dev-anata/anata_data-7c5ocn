@@ -1,0 +1,224 @@
+{
+  "displayName": "Document Processing Dashboard",
+  "mosaicLayout": {
+    "columns": 2,
+    "tiles": [
+      {
+        "width": 1,
+        "height": 1,
+        "widget": {
+          "title": "Document Processing Time",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/document/processing_time\"",
+                    "aggregation": {
+                      "alignmentPeriod": "60s",
+                      "crossSeriesReducer": "REDUCE_MEAN",
+                      "perSeriesAligner": "ALIGN_MEAN"
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "legendTemplate": "Processing Time (seconds)"
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 120,
+                "label": "SLA Threshold (2 minutes)",
+                "color": "RED"
+              }
+            ],
+            "yAxis": {
+              "label": "Processing Time (seconds)",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "width": 1,
+        "height": 1,
+        "widget": {
+          "title": "Processing Queue Length",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/document/queue_length\"",
+                    "aggregation": {
+                      "alignmentPeriod": "300s",
+                      "crossSeriesReducer": "REDUCE_MAX",
+                      "perSeriesAligner": "ALIGN_MAX"
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "legendTemplate": "Queue Length"
+              }
+            ],
+            "yAxis": {
+              "label": "Documents in Queue",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "width": 1,
+        "height": 1,
+        "widget": {
+          "title": "Processing Errors",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/document/errors\"",
+                    "aggregation": {
+                      "alignmentPeriod": "300s",
+                      "crossSeriesReducer": "REDUCE_SUM",
+                      "perSeriesAligner": "ALIGN_SUM"
+                    }
+                  }
+                },
+                "plotType": "STACKED_BAR",
+                "legendTemplate": "Error Count"
+              }
+            ],
+            "yAxis": {
+              "label": "Error Count",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "width": 1,
+        "height": 1,
+        "widget": {
+          "title": "OCR Confidence Score",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/document/ocr_confidence\"",
+                    "aggregation": {
+                      "alignmentPeriod": "60s",
+                      "crossSeriesReducer": "REDUCE_MEAN",
+                      "perSeriesAligner": "ALIGN_MEAN"
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "legendTemplate": "Confidence Score"
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 0.8,
+                "label": "Minimum Confidence",
+                "color": "YELLOW"
+              }
+            ],
+            "yAxis": {
+              "label": "Confidence Score",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "width": 1,
+        "height": 1,
+        "widget": {
+          "title": "Documents Processed per Hour",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/document/processed_count\"",
+                    "aggregation": {
+                      "alignmentPeriod": "3600s",
+                      "crossSeriesReducer": "REDUCE_SUM",
+                      "perSeriesAligner": "ALIGN_SUM"
+                    }
+                  }
+                },
+                "plotType": "STACKED_BAR",
+                "legendTemplate": "Documents Processed"
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 100,
+                "label": "Minimum Throughput",
+                "color": "RED"
+              }
+            ],
+            "yAxis": {
+              "label": "Documents per Hour",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "width": 1,
+        "height": 1,
+        "widget": {
+          "title": "Storage Usage",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/document/storage_usage\"",
+                    "aggregation": {
+                      "alignmentPeriod": "300s",
+                      "crossSeriesReducer": "REDUCE_MEAN",
+                      "perSeriesAligner": "ALIGN_MEAN"
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "legendTemplate": "Storage Usage (%)"
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 85,
+                "label": "Storage Warning",
+                "color": "YELLOW"
+              }
+            ],
+            "yAxis": {
+              "label": "Storage Usage (%)",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "timeSelection": {
+    "timeRange": {
+      "default": "RELATIVE_TIME_RANGE_1_HOUR",
+      "supportedRanges": [
+        "RELATIVE_TIME_RANGE_1_HOUR",
+        "RELATIVE_TIME_RANGE_6_HOURS",
+        "RELATIVE_TIME_RANGE_24_HOURS",
+        "RELATIVE_TIME_RANGE_7_DAYS"
+      ]
+    }
+  },
+  "refreshSettings": {
+    "refreshInterval": "300s"
+  }
+}
