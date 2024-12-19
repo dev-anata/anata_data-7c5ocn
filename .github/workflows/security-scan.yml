@@ -1,0 +1,165 @@
+# Security Scan Workflow v1.0.0
+# Comprehensive security scanning pipeline for the Pharmaceutical Data Pipeline Platform
+# Implements enterprise-grade security controls, vulnerability assessments, and compliance monitoring
+
+name: Security Scan
+
+# Trigger configuration for security scanning
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly scan on Sundays
+
+# Environment configuration
+env:
+  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  SECURITY_SCAN_SEVERITY: high
+  SCAN_TIMEOUT: 360
+
+jobs:
+  # Job 1: Advanced Static Code Analysis with CodeQL
+  codeql-analysis:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'typescript', 'javascript', 'python' ]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: Autobuild with Security Flags
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{ matrix.language }}"
+          upload-sarif: true
+
+  # Job 2: Comprehensive Dependency Vulnerability Scanning
+  dependency-scan:
+    name: Dependency Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: ./src/backend
+
+      - name: Run Snyk Scan
+        uses: snyk/actions/node@v1.2.0
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high --all-projects --dev
+          sarif: true
+          json: true
+
+      - name: Upload Snyk Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: snyk.sarif
+        if: always()
+
+  # Job 3: Container Security Scanning
+  container-scan:
+    name: Container Vulnerability Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Build Container Image
+        run: docker build -t app:${{ github.sha }} ./src/backend
+
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@0.11.0
+        with:
+          image-ref: app:${{ github.sha }}
+          format: 'template'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          security-checks: 'vuln,config,secret'
+          timeout: '30m'
+
+      - name: Upload Trivy Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
+        if: always()
+
+  # Job 4: Security Report Generation
+  security-report:
+    name: Generate Security Report
+    needs: [codeql-analysis, dependency-scan, container-scan]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Aggregate Security Results
+        run: |
+          echo "Security Scan Summary" > security-report.md
+          echo "===================" >> security-report.md
+          echo "Scan completed at: $(date)" >> security-report.md
+          echo "Branch: ${{ github.ref }}" >> security-report.md
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: security-report.md
+          retention-days: 90
+
+      - name: Send Notifications
+        if: failure() || contains(steps.*.outcome, 'failure')
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow,job,took
+          channel: '#security-alerts'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+  packages: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
