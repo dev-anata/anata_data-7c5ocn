@@ -1,0 +1,292 @@
+{
+  "displayName": "Web Scraping Service Dashboard",
+  "mosaicLayout": {
+    "columns": 12,
+    "tiles": [
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Job Success Rate",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/scraping/job_success_rate\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_MEAN",
+                      "alignmentPeriod": "300s",
+                      "crossSeriesReducer": "REDUCE_MEAN"
+                    }
+                  },
+                  "unitOverride": "1"
+                },
+                "plotType": "LINE",
+                "minAlignmentPeriod": "300s"
+              }
+            ],
+            "timeshiftDuration": "0s",
+            "yAxis": {
+              "label": "Success Rate (%)",
+              "scale": "LINEAR"
+            },
+            "chartOptions": {
+              "mode": "COLOR"
+            },
+            "thresholds": [
+              {
+                "value": 99.9,
+                "label": "SLO Target",
+                "color": "RED"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Job Processing Rate",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/scraping/jobs_per_hour\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_RATE",
+                      "alignmentPeriod": "3600s"
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "minAlignmentPeriod": "3600s"
+              }
+            ],
+            "yAxis": {
+              "label": "Jobs/Hour",
+              "scale": "LINEAR"
+            },
+            "thresholds": [
+              {
+                "value": 100,
+                "label": "Minimum Throughput",
+                "color": "RED"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Error Rate",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/scraping/error_rate\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_MEAN",
+                      "alignmentPeriod": "300s"
+                    }
+                  }
+                },
+                "plotType": "LINE"
+              }
+            ],
+            "yAxis": {
+              "label": "Error Rate (%)",
+              "scale": "LINEAR"
+            },
+            "thresholds": [
+              {
+                "value": 0.1,
+                "label": "Error SLO",
+                "color": "RED"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Resource Utilization",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/scraping/cpu_utilization\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_MEAN",
+                      "alignmentPeriod": "60s"
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "legendTemplate": "CPU"
+              },
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/scraping/memory_utilization\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_MEAN",
+                      "alignmentPeriod": "60s"
+                    }
+                  }
+                },
+                "plotType": "LINE",
+                "legendTemplate": "Memory"
+              }
+            ],
+            "yAxis": {
+              "label": "Utilization (%)",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "width": 12,
+        "height": 3,
+        "widget": {
+          "title": "Active Jobs by Source",
+          "scorecard": {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"custom.googleapis.com/scraping/active_jobs\" AND metric.label.source=*",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_MEAN",
+                  "crossSeriesReducer": "REDUCE_COUNT",
+                  "groupByFields": ["metric.label.source"]
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "labels": {
+    "service": "scraping",
+    "environment": "${env}",
+    "version": "v1"
+  },
+  "dashboardFilters": [
+    {
+      "filterType": "RESOURCE_LABEL",
+      "labelKey": "environment"
+    },
+    {
+      "filterType": "METRIC_LABEL",
+      "labelKey": "job_type"
+    }
+  ],
+  "refreshInterval": "1m",
+  "timeRange": {
+    "default": "1h",
+    "options": ["15m", "1h", "3h", "6h", "12h", "24h", "7d"]
+  },
+  "etag": "\"${etag}\"",
+  "accessControl": {
+    "requiredRoles": [
+      "roles/monitoring.viewer",
+      "roles/monitoring.dashboardViewer"
+    ],
+    "requiredPermissions": [
+      "monitoring.dashboards.get",
+      "monitoring.timeSeries.list"
+    ]
+  },
+  "customMetrics": [
+    {
+      "name": "custom.googleapis.com/scraping/job_success_rate",
+      "displayName": "Job Success Rate",
+      "description": "Percentage of successfully completed scraping jobs",
+      "metricKind": "GAUGE",
+      "valueType": "DOUBLE",
+      "unit": "%",
+      "labels": [
+        {
+          "key": "job_type",
+          "valueType": "STRING",
+          "description": "Type of scraping job"
+        },
+        {
+          "key": "source",
+          "valueType": "STRING",
+          "description": "Data source being scraped"
+        }
+      ]
+    },
+    {
+      "name": "custom.googleapis.com/scraping/jobs_per_hour",
+      "displayName": "Jobs Per Hour",
+      "description": "Number of jobs processed per hour",
+      "metricKind": "GAUGE",
+      "valueType": "INT64",
+      "unit": "1",
+      "labels": [
+        {
+          "key": "job_type",
+          "valueType": "STRING",
+          "description": "Type of scraping job"
+        }
+      ]
+    },
+    {
+      "name": "custom.googleapis.com/scraping/error_rate",
+      "displayName": "Error Rate",
+      "description": "Percentage of failed scraping jobs",
+      "metricKind": "GAUGE",
+      "valueType": "DOUBLE",
+      "unit": "%",
+      "labels": [
+        {
+          "key": "error_type",
+          "valueType": "STRING",
+          "description": "Type of error encountered"
+        }
+      ]
+    },
+    {
+      "name": "custom.googleapis.com/scraping/cpu_utilization",
+      "displayName": "CPU Utilization",
+      "description": "CPU usage percentage",
+      "metricKind": "GAUGE",
+      "valueType": "DOUBLE",
+      "unit": "%"
+    },
+    {
+      "name": "custom.googleapis.com/scraping/memory_utilization",
+      "displayName": "Memory Utilization",
+      "description": "Memory usage percentage",
+      "metricKind": "GAUGE",
+      "valueType": "DOUBLE",
+      "unit": "%"
+    },
+    {
+      "name": "custom.googleapis.com/scraping/active_jobs",
+      "displayName": "Active Jobs",
+      "description": "Number of currently running scraping jobs",
+      "metricKind": "GAUGE",
+      "valueType": "INT64",
+      "unit": "1",
+      "labels": [
+        {
+          "key": "source",
+          "valueType": "STRING",
+          "description": "Data source being scraped"
+        }
+      ]
+    }
+  ]
+}
