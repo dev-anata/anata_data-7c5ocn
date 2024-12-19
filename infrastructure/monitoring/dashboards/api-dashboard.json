@@ -1,0 +1,295 @@
+{
+  "displayName": "API Service Dashboard",
+  "mosaicLayout": {
+    "columns": 12,
+    "tiles": [
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "API Response Time Distribution",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/api/response_time_p50\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_PERCENTILE_50",
+                      "alignmentPeriod": "60s"
+                    }
+                  },
+                  "unitOverride": "ms",
+                  "plotType": "LINE",
+                  "legendTemplate": "P50 Response Time"
+                }
+              },
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/api/response_time_p95\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_PERCENTILE_95",
+                      "alignmentPeriod": "60s"
+                    }
+                  },
+                  "unitOverride": "ms",
+                  "plotType": "LINE",
+                  "legendTemplate": "P95 Response Time"
+                }
+              },
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/api/response_time_p99\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_PERCENTILE_99",
+                      "alignmentPeriod": "60s"
+                    }
+                  },
+                  "unitOverride": "ms",
+                  "plotType": "LINE",
+                  "legendTemplate": "P99 Response Time"
+                }
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 500,
+                "label": "SLO Threshold (500ms)",
+                "color": "RED"
+              }
+            ],
+            "yAxis": {
+              "label": "Response Time (ms)",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "width": 6,
+        "height": 3,
+        "widget": {
+          "title": "System Uptime",
+          "scorecard": {
+            "timeSeriesQuery": {
+              "timeSeriesFilter": {
+                "filter": "metric.type=\"custom.googleapis.com/api/uptime\"",
+                "aggregation": {
+                  "perSeriesAligner": "ALIGN_MEAN",
+                  "alignmentPeriod": "3600s"
+                }
+              }
+            },
+            "thresholds": [
+              {
+                "value": 99.9,
+                "label": "SLO Target (99.9%)",
+                "color": "GREEN"
+              }
+            ],
+            "sparkChartView": {
+              "sparkChartType": "SPARK_LINE"
+            }
+          }
+        }
+      },
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Error Rate by Endpoint",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/api/error_rate\" AND metadata.user_labels.service=\"api\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_MEAN",
+                      "alignmentPeriod": "60s",
+                      "groupByFields": ["metric.labels.endpoint"]
+                    }
+                  },
+                  "unitOverride": "%",
+                  "plotType": "LINE",
+                  "legendTemplate": "${metric.labels.endpoint}"
+                }
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 0.1,
+                "label": "Error SLO (0.1%)",
+                "color": "RED"
+              }
+            ],
+            "yAxis": {
+              "label": "Error Rate (%)",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      },
+      {
+        "width": 6,
+        "height": 4,
+        "widget": {
+          "title": "Resource Utilization",
+          "xyChart": {
+            "dataSets": [
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/api/cpu_usage\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_MAX",
+                      "alignmentPeriod": "60s"
+                    }
+                  },
+                  "unitOverride": "%",
+                  "plotType": "LINE",
+                  "legendTemplate": "CPU Usage"
+                }
+              },
+              {
+                "timeSeriesQuery": {
+                  "timeSeriesFilter": {
+                    "filter": "metric.type=\"custom.googleapis.com/api/memory_usage\"",
+                    "aggregation": {
+                      "perSeriesAligner": "ALIGN_MAX",
+                      "alignmentPeriod": "60s"
+                    }
+                  },
+                  "unitOverride": "%",
+                  "plotType": "LINE",
+                  "legendTemplate": "Memory Usage"
+                }
+              }
+            ],
+            "thresholds": [
+              {
+                "value": 80,
+                "label": "Resource Warning",
+                "color": "YELLOW"
+              }
+            ],
+            "yAxis": {
+              "label": "Usage (%)",
+              "scale": "LINEAR"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "labels": {
+    "service": "api",
+    "environment": "${env}",
+    "version": "${version}"
+  },
+  "refreshInterval": "1m",
+  "timeSelection": {
+    "timeRange": "1h"
+  },
+  "categoryFilters": [
+    {
+      "category": "performance",
+      "displayName": "Performance Metrics"
+    },
+    {
+      "category": "reliability",
+      "displayName": "Reliability Metrics"
+    },
+    {
+      "category": "resources",
+      "displayName": "Resource Utilization"
+    }
+  ],
+  "metricDescriptors": [
+    {
+      "metricDescriptor": {
+        "type": "custom.googleapis.com/api/response_time_p50",
+        "description": "50th percentile API response time",
+        "displayName": "Response Time P50",
+        "metricKind": "GAUGE",
+        "valueType": "DOUBLE",
+        "unit": "ms",
+        "labels": []
+      }
+    },
+    {
+      "metricDescriptor": {
+        "type": "custom.googleapis.com/api/response_time_p95",
+        "description": "95th percentile API response time",
+        "displayName": "Response Time P95",
+        "metricKind": "GAUGE",
+        "valueType": "DOUBLE",
+        "unit": "ms",
+        "labels": []
+      }
+    },
+    {
+      "metricDescriptor": {
+        "type": "custom.googleapis.com/api/response_time_p99",
+        "description": "99th percentile API response time",
+        "displayName": "Response Time P99",
+        "metricKind": "GAUGE",
+        "valueType": "DOUBLE",
+        "unit": "ms",
+        "labels": []
+      }
+    },
+    {
+      "metricDescriptor": {
+        "type": "custom.googleapis.com/api/uptime",
+        "description": "API service uptime percentage",
+        "displayName": "System Uptime",
+        "metricKind": "GAUGE",
+        "valueType": "DOUBLE",
+        "unit": "%",
+        "labels": []
+      }
+    },
+    {
+      "metricDescriptor": {
+        "type": "custom.googleapis.com/api/error_rate",
+        "description": "API error rate by endpoint",
+        "displayName": "Error Rate",
+        "metricKind": "GAUGE",
+        "valueType": "DOUBLE",
+        "unit": "%",
+        "labels": [
+          {
+            "key": "endpoint",
+            "description": "API endpoint path",
+            "valueType": "STRING"
+          }
+        ]
+      }
+    },
+    {
+      "metricDescriptor": {
+        "type": "custom.googleapis.com/api/cpu_usage",
+        "description": "API service CPU usage",
+        "displayName": "CPU Usage",
+        "metricKind": "GAUGE",
+        "valueType": "DOUBLE",
+        "unit": "%",
+        "labels": []
+      }
+    },
+    {
+      "metricDescriptor": {
+        "type": "custom.googleapis.com/api/memory_usage",
+        "description": "API service memory usage",
+        "displayName": "Memory Usage",
+        "metricKind": "GAUGE",
+        "valueType": "DOUBLE",
+        "unit": "%",
+        "labels": []
+      }
+    }
+  ]
+}
