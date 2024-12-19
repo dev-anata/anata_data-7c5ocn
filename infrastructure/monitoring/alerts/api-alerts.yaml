@@ -1,0 +1,175 @@
+# Google Cloud Monitoring Alert Policies Configuration for API Service
+# Version: 1.0.0
+# Dependencies: @google-cloud/monitoring ^3.0.0
+
+# Display name prefix for all alert policies
+displayNamePrefix: "API Service"
+
+# Common alert policy configuration
+commonConfig:
+  enabled: true
+  combiner: OR
+  conditions:
+    aggregations:
+      alignmentPeriod: 60s
+      crossSeriesReducer: REDUCE_MEAN
+      groupByFields:
+        - resource.labels.service_name
+        - resource.labels.location
+
+# Alert Policies
+alertPolicies:
+  # Response Time Alert Policy
+  - displayName: ${displayNamePrefix} - High Response Time
+    documentation:
+      content: "API response time is exceeding the SLO threshold of 500ms for 95th percentile"
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "Response Time > 500ms (95th percentile)"
+        conditionThreshold:
+          filter: >-
+            metric.type="custom.googleapis.com/api/response_time"
+            resource.type="cloud_run_revision"
+          aggregations:
+            alignmentPeriod: 60s
+            perSeriesAligner: ALIGN_PERCENTILE_95
+          comparison: COMPARISON_GT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 500
+    alertStrategy:
+      autoClose: 1800s
+    combiner: OR
+    notificationChannels:
+      - ${EMAIL_CHANNEL}
+      - ${SLACK_CHANNEL}
+    severity: CRITICAL
+
+  # Error Rate Alert Policy
+  - displayName: ${displayNamePrefix} - High Error Rate
+    documentation:
+      content: "API error rate exceeding threshold of 0.1%"
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "Error Rate > 0.1%"
+        conditionThreshold:
+          filter: >-
+            metric.type="custom.googleapis.com/api/error_rate"
+            resource.type="cloud_run_revision"
+          aggregations:
+            alignmentPeriod: 60s
+            perSeriesAligner: ALIGN_MEAN
+          comparison: COMPARISON_GT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 0.001
+    alertStrategy:
+      autoClose: 1800s
+    combiner: OR
+    notificationChannels:
+      - ${EMAIL_CHANNEL}
+      - ${SLACK_CHANNEL}
+    severity: CRITICAL
+
+  # Request Spike Alert Policy
+  - displayName: ${displayNamePrefix} - Request Rate Spike
+    documentation:
+      content: "Sudden spike in API request rate detected"
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "Request Rate > 1000 req/min"
+        conditionThreshold:
+          filter: >-
+            metric.type="custom.googleapis.com/api/request_count"
+            resource.type="cloud_run_revision"
+          aggregations:
+            alignmentPeriod: 60s
+            perSeriesAligner: ALIGN_RATE
+          comparison: COMPARISON_GT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 1000
+    alertStrategy:
+      autoClose: 1800s
+    combiner: OR
+    notificationChannels:
+      - ${EMAIL_CHANNEL}
+    severity: WARNING
+
+  # Memory Usage Alert Policy
+  - displayName: ${displayNamePrefix} - High Memory Usage
+    documentation:
+      content: "API service memory usage exceeding 85%"
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "Memory Usage > 85%"
+        conditionThreshold:
+          filter: >-
+            metric.type="custom.googleapis.com/api/memory_usage"
+            resource.type="cloud_run_revision"
+          aggregations:
+            alignmentPeriod: 60s
+            perSeriesAligner: ALIGN_MAX
+          comparison: COMPARISON_GT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 85
+    alertStrategy:
+      autoClose: 1800s
+    combiner: OR
+    notificationChannels:
+      - ${EMAIL_CHANNEL}
+      - ${SLACK_CHANNEL}
+    severity: WARNING
+
+  # CPU Usage Alert Policy
+  - displayName: ${displayNamePrefix} - High CPU Usage
+    documentation:
+      content: "API service CPU usage exceeding 80%"
+      mimeType: "text/markdown"
+    conditions:
+      - displayName: "CPU Usage > 80%"
+        conditionThreshold:
+          filter: >-
+            metric.type="custom.googleapis.com/api/cpu_usage"
+            resource.type="cloud_run_revision"
+          aggregations:
+            alignmentPeriod: 60s
+            perSeriesAligner: ALIGN_MAX
+          comparison: COMPARISON_GT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 80
+    alertStrategy:
+      autoClose: 1800s
+    combiner: OR
+    notificationChannels:
+      - ${EMAIL_CHANNEL}
+      - ${SLACK_CHANNEL}
+    severity: WARNING
+
+# Notification Channels
+notificationChannels:
+  - type: email
+    displayName: "API Team Email"
+    labels:
+      email_address: ${EMAIL_ADDRESS}
+    enabled: true
+
+  - type: slack
+    displayName: "API Alerts Channel"
+    labels:
+      channel_name: "#api-alerts"
+      auth_token: ${SLACK_TOKEN}
+    enabled: true
+
+# Environment Variables Required
+# EMAIL_ADDRESS: Email address for notifications
+# SLACK_TOKEN: Slack authentication token
+# EMAIL_CHANNEL: Email notification channel ID
+# SLACK_CHANNEL: Slack notification channel ID
