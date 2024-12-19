@@ -1,0 +1,107 @@
+PHARMACEUTICAL DATA PIPELINE PLATFORM
+Proprietary Software License Agreement
+Version 1.0.0
+Effective Date: 2024-01-01
+
+IMPORTANT: PLEASE READ THIS LICENSE AGREEMENT CAREFULLY BEFORE USING THE SOFTWARE.
+
+1. DEFINITIONS
+
+1.1. "Software" means the Pharmaceutical Data Pipeline Platform software and associated documentation.
+1.2. "Licensor" means the owner and provider of the Software.
+1.3. "Licensee" means the entity or individual granted rights under this License.
+1.4. "Pharmaceutical Data" means any data processed, stored, or transmitted using the Software.
+1.5. "Cloud Infrastructure" means the Google Cloud Platform (GCP) services used to deploy the Software.
+
+2. GRANT OF LICENSE
+
+2.1. Subject to the terms and conditions of this Agreement, Licensor hereby grants Licensee a non-transferable, non-exclusive license to:
+   a) Deploy the Software on approved Cloud Infrastructure
+   b) Process pharmaceutical industry data in accordance with applicable regulations
+   c) Create derivative works solely for internal use
+   d) Access and utilize the Software's APIs and services
+
+2.2. Restrictions:
+   a) Licensee shall not sublicense, sell, lease, or distribute the Software
+   b) Licensee shall not reverse engineer or decompile the Software
+   c) Licensee shall not remove or alter any proprietary notices
+   d) Licensee shall not use the Software for unauthorized purposes
+
+3. DATA PROCESSING TERMS
+
+3.1. Data Classification:
+   a) Public Data: Company information accessible to the public
+   b) Internal Data: Business operational data
+   c) Confidential Data: Sensitive business information
+   d) Restricted Data: Regulated data including PII and financial information
+
+3.2. Data Protection Requirements:
+   a) Implementation of encryption for data at rest and in transit
+   b) Maintenance of data access logs for audit purposes
+   c) Implementation of data retention policies
+   d) Compliance with data sovereignty requirements
+
+4. CLOUD DEPLOYMENT REQUIREMENTS
+
+4.1. Approved Deployment Environments:
+   a) Development environment for testing
+   b) Staging environment for validation
+   c) Production environment for operational use
+
+4.2. Security Requirements:
+   a) Implementation of access controls
+   b) Regular security audits
+   c) Vulnerability assessments
+   d) Incident response procedures
+
+5. REGIONAL COMPLIANCE
+
+5.1. Global Compliance Frameworks:
+   a) GDPR compliance for European operations
+   b) HIPAA compliance for healthcare data
+   c) GxP compliance for pharmaceutical processes
+
+5.2. Data Sovereignty:
+   a) Regional data storage requirements
+   b) Cross-border data transfer restrictions
+   c) Local regulatory compliance
+
+6. LIABILITY AND WARRANTY
+
+6.1. Disclaimer of Warranty:
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+
+6.2. Limitation of Liability:
+IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY SPECIAL, INCIDENTAL, INDIRECT, OR CONSEQUENTIAL DAMAGES.
+
+7. TERM AND TERMINATION
+
+7.1. This Agreement is effective from the Effective Date until terminated.
+7.2. Licensor may terminate this Agreement immediately upon breach.
+7.3. Upon termination, Licensee must cease all use of the Software.
+
+8. AUDIT AND COMPLIANCE
+
+8.1. Audit Requirements:
+   a) Maintenance of audit logs for 7 years
+   b) Regular compliance assessments
+   c) Documentation of all data processing activities
+
+8.2. Reporting Requirements:
+   a) Security incident reporting
+   b) Compliance violation reporting
+   c) Regular audit reports
+
+9. CONTACT INFORMATION
+
+Legal Affairs Department
+Email: legal@company.com
+
+Compliance Office
+Email: compliance@company.com
+
+SPDX-License-Identifier: PROPRIETARY
+
+---
+Last Reviewed: 2024-01-01
+Next Review: 2024-07-01
