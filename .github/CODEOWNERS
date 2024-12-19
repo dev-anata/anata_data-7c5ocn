@@ -1,0 +1,41 @@
+# Format: pattern  owner1 owner2 ...
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global fallback - Lead architects review all unspecified files
+*                                               @pharma-pipeline/lead-architects
+
+# API Module
+src/backend/src/api/**                         @pharma-pipeline/api-team
+
+# Web Scraping Module
+src/backend/src/scraping/**                    @pharma-pipeline/scraping-team
+
+# Document Processing Module
+src/backend/src/document-processing/**         @pharma-pipeline/doc-processing-team
+
+# Core Infrastructure Module
+src/backend/src/core/**                        @pharma-pipeline/core-team
+
+# CLI Module
+src/backend/src/cli/**                         @pharma-pipeline/cli-team
+
+# Infrastructure and Deployment
+infrastructure/**                              @pharma-pipeline/devops-team
+
+# CI/CD Workflows
+.github/workflows/**                           @pharma-pipeline/devops-team
+
+# Test Files
+src/backend/tests/**                           @pharma-pipeline/qa-team
+
+# Configuration Files - Requires both Core and DevOps team approval
+src/backend/src/config/**                      @pharma-pipeline/core-team @pharma-pipeline/devops-team
+
+# Security Configuration - Requires both Security and DevOps team approval
+infrastructure/security/**                     @pharma-pipeline/security-team @pharma-pipeline/devops-team
+
+# Package Dependencies - Requires both Core and Security team approval
+src/backend/package.json                       @pharma-pipeline/core-team @pharma-pipeline/security-team
+
+# Infrastructure as Code - Requires both DevOps and Security team approval
+infrastructure/terraform/**                    @pharma-pipeline/devops-team @pharma-pipeline/security-team
