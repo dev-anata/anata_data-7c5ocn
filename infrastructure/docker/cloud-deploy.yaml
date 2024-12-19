@@ -1,0 +1,153 @@
+# Cloud Deploy configuration for Pharmaceutical Data Pipeline Platform
+# Version: 1.0.0
+# Implements multi-environment deployment pipeline with progressive rollout and automated rollback
+
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: pharma-pipeline-delivery
+description: "Pharmaceutical Data Pipeline Platform deployment pipeline"
+
+serialPipeline:
+  stages:
+    # Development Environment
+    - targetId: development
+      profiles: [dev]
+      strategy:
+        standard:
+          verify: false
+          deploy:
+            timeout: 300s
+      cloudRun:
+        location: ${REGION}
+        service: pharma-pipeline-backend-dev
+        healthCheck:
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+    # Staging Environment
+    - targetId: staging
+      profiles: [staging]
+      strategy:
+        blueGreen:
+          verify: true
+          timeout: 600s
+          postRouteTraffic:
+            verifyDeployment:
+              timeout: 300s
+              monitoring:
+                metrics:
+                  - name: error_rate
+                    threshold: 0.01 # 1% error rate threshold
+                    window: 5m
+          rollback:
+            enabled: true
+            onFailure: true
+      cloudRun:
+        location: ${REGION}
+        service: pharma-pipeline-backend-staging
+        healthCheck:
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 2
+
+    # Production Environment
+    - targetId: production
+      profiles: [prod]
+      strategy:
+        canary:
+          runtimeConfig:
+            cloudRun:
+              automaticRollback: true
+          steps:
+            - percentage: 5
+              verify:
+                timeout: 600s
+                monitoring:
+                  metrics:
+                    - name: error_rate
+                      threshold: 0.001 # 0.1% error rate threshold
+                    - name: latency_p95
+                      threshold: 500 # 500ms p95 latency threshold
+            - percentage: 20
+              verify:
+                timeout: 600s
+            - percentage: 50
+              verify:
+                timeout: 600s
+            - percentage: 100
+              verify:
+                timeout: 600s
+          rollback:
+            enabled: true
+            onFailure: true
+      cloudRun:
+        location: ${REGION}
+        service: pharma-pipeline-backend-prod
+        healthCheck:
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 5
+          failureThreshold: 1
+
+spec:
+  images:
+    - name: pharma-pipeline-backend
+      tag: ${COMMIT_SHA}
+      repository: gcr.io/${PROJECT_ID}/pharma-pipeline-backend
+
+  monitoring:
+    metrics:
+      - name: error_rate
+        filter: |
+          resource.type="cloud_run_revision"
+          metric.type="run.googleapis.com/request_count"
+          metric.labels.response_code >= 500
+      - name: latency_p95
+        filter: |
+          resource.type="cloud_run_revision"
+          metric.type="run.googleapis.com/request_latencies"
+          | align percentile_95
+
+    alerts:
+      - name: deployment_failure
+        channels:
+          - email: platform-alerts@company.com
+          - slack: "#platform-alerts"
+        conditions:
+          - type: deployment_status
+            status: failed
+      - name: rollback_triggered
+        channels:
+          - email: platform-alerts@company.com
+          - slack: "#platform-alerts"
+        conditions:
+          - type: rollback_status
+            status: triggered
+
+  security:
+    serviceAccount: pharma-pipeline-deploy@${PROJECT_ID}.iam.gserviceaccount.com
+    vpcConnector: projects/${PROJECT_ID}/locations/${REGION}/connectors/pharma-pipeline-vpc
+    secretManager:
+      enabled: true
+      project: ${PROJECT_ID}
+
+  compliance:
+    auditLogging:
+      enabled: true
+      logBucket: gs://${PROJECT_ID}-audit-logs
+    approvals:
+      required:
+        - environment: production
+          minApprovers: 2
+          groups:
+            - platform-admins@company.com
+            - security-team@company.com
+
+  annotations:
+    app.kubernetes.io/name: pharma-pipeline
+    app.kubernetes.io/version: ${COMMIT_SHA}
+    deploy.cloud.google.com/platform: cloud-run
