@@ -1,0 +1,97 @@
+node_modules
+venv
+pip-cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.env/
+
+# Build outputs
+dist
+build
+*.so
+*.egg
+*.egg-info
+*.whl
+
+# Test files
+tests/
+coverage/
+.coverage
+htmlcov/
+*.test.ts
+*.spec.ts
+test-results/
+pytest_cache/
+.pytest_cache/
+
+# Development files
+.git
+.gitignore
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+*.bak
+*.tmp
+
+# Documentation
+README.md
+CHANGELOG.md
+docs/
+*.rst
+*.md
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Sensitive files
+.env*
+*.key
+*.pem
+*.crt
+*.p12
+secrets/
+credentials/
+config/*.json
+
+# Logs
+*.log
+logs/
+log/
+logging/
+
+# Cache and temp files
+.cache/
+.temp/
+tmp/
+.npm/
+.yarn/
+
+# Development configs
+.editorconfig
+.eslintrc*
+.prettierrc*
+.flake8
+setup.cfg
+tox.ini
+mypy.ini
+pyrightconfig.json
+
+# Local development
+local/
+dev/
+*.local
+*.dev.*
+
+# Backup files
+*~
+*.bak
+*.swp
+*.swo
