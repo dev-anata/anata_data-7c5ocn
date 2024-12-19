@@ -1,0 +1,68 @@
+# Cloud KMS Keyring Configuration for Pharmaceutical Data Pipeline Platform
+# This configuration defines encryption keys and IAM policies for protecting sensitive data
+# Version: 1.0
+# Last Updated: 2024
+
+# Keyring configuration
+keyring:
+  name: pharma-pipeline-keyring
+  location: us-central1
+  description: KMS keyring for Pharmaceutical Data Pipeline encryption
+  
+  # Encryption keys configuration
+  keys:
+    # Cloud Storage encryption key
+    - name: storage-key
+      purpose: ENCRYPT_DECRYPT
+      rotation_period: 7776000s  # 90 days
+      version_template:
+        algorithm: GOOGLE_SYMMETRIC_ENCRYPTION
+        protection_level: HSM
+      description: Encryption key for Cloud Storage data with 90-day rotation
+    
+    # BigQuery encryption key  
+    - name: bigquery-key
+      purpose: ENCRYPT_DECRYPT
+      rotation_period: 7776000s  # 90 days
+      version_template:
+        algorithm: GOOGLE_SYMMETRIC_ENCRYPTION
+        protection_level: HSM
+      description: Encryption key for BigQuery datasets with 90-day rotation
+    
+    # Secret Manager encryption key
+    - name: secrets-key
+      purpose: ENCRYPT_DECRYPT
+      rotation_period: 2592000s  # 30 days
+      version_template:
+        algorithm: GOOGLE_SYMMETRIC_ENCRYPTION
+        protection_level: HSM
+      description: Encryption key for Secret Manager secrets with 30-day rotation
+
+# IAM policies for key access
+iam_policies:
+  # Storage key access policies
+  - key: storage-key
+    roles:
+      - role: roles/cloudkms.cryptoKeyEncrypterDecrypter
+        members:
+          - serviceAccount:${service_account_email}
+  
+  # BigQuery key access policies
+  - key: bigquery-key
+    roles:
+      - role: roles/cloudkms.cryptoKeyEncrypterDecrypter
+        members:
+          - serviceAccount:${service_account_email}
+  
+  # Secrets key access policies
+  - key: secrets-key
+    roles:
+      - role: roles/cloudkms.cryptoKeyEncrypterDecrypter
+        members:
+          - serviceAccount:${service_account_email}
+
+# Resource labels
+labels:
+  environment: ${environment}
+  managed_by: terraform
+  component: security
