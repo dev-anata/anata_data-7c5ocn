@@ -1,0 +1,82 @@
+# VPC Service Controls Configuration for Pharmaceutical Data Pipeline Platform
+# Version: 1.0
+# Purpose: Define security perimeter and access levels for data isolation and protection
+
+service_perimeter:
+  title: "Pharmaceutical Data Pipeline Service Perimeter"
+  description: "VPC Service Controls perimeter configuration for the Pharmaceutical Data Pipeline Platform"
+  status:
+    # Protected GCP resources within the perimeter
+    resources:
+      - "projects/${var.project_id}"
+    
+    # GCP services that are restricted within the perimeter
+    restricted_services:
+      - "storage.googleapis.com"
+      - "bigquery.googleapis.com"
+      - "cloudfunctions.googleapis.com"
+      - "run.googleapis.com"
+      - "cloudkms.googleapis.com"
+      - "artifactregistry.googleapis.com"
+    
+    # VPC-accessible services configuration
+    vpc_accessible_services:
+      enable_restriction: true
+      allowed_services:
+        - "storage.googleapis.com"
+        - "bigquery.googleapis.com"
+        - "cloudfunctions.googleapis.com"
+        - "run.googleapis.com"
+        - "cloudkms.googleapis.com"
+        - "artifactregistry.googleapis.com"
+    
+    # Ingress access policies
+    ingress_policies:
+      - ingress_from:
+          identity_type: "SERVICE_ACCOUNT"
+          identities:
+            - "serviceAccount:${var.service_account_email}"
+          sources:
+            resource: "projects/${var.project_id}"
+          
+        ingress_to:
+          resources:
+            - "projects/${var.project_id}"
+          operations:
+            storage.googleapis.com:
+              methods:
+                - "google.storage.objects.get"
+                - "google.storage.objects.list"
+                - "google.storage.objects.create"
+                - "google.storage.objects.delete"
+                - "google.storage.objects.update"
+            bigquery.googleapis.com:
+              methods:
+                - "google.cloud.bigquery.v2.jobs.*"
+                - "google.cloud.bigquery.v2.tables.*"
+    
+    # Egress access policies
+    egress_policies:
+      - egress_from:
+          identity_type: "SERVICE_ACCOUNT"
+          identities:
+            - "serviceAccount:${var.service_account_email}"
+        egress_to:
+          resources:
+            - "projects/${var.project_id}"
+          operations:
+            storage.googleapis.com: "*"
+            bigquery.googleapis.com: "*"
+
+# Access level definitions
+access_levels:
+  - name: "pharma_pipeline_access"
+    title: "Pharmaceutical Pipeline Access Level"
+    basic:
+      conditions:
+        - ip_subnetworks:
+            - "${var.primary_subnet_cidr}"
+            - "${var.dr_subnet_cidr}"
+          required_access_levels: []
+          vpc_network_sources:
+            network: "projects/${var.project_id}/global/networks/${var.vpc_name}"
