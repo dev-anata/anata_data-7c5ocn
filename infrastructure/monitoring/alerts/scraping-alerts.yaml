@@ -1,0 +1,202 @@
+# Google Cloud Monitoring Alert Policies Configuration for Web Scraping Service
+# Version: 1.0.0
+# Dependencies: @google-cloud/monitoring ^3.0.0
+
+# Global alert policy settings
+displayName: "Web Scraping Service Alerts"
+documentation:
+  content: |
+    Alert policies for monitoring web scraping service performance and reliability.
+    Runbook: https://wiki.example.com/runbooks/scraping/
+    Team: Data Engineering
+    Support: #data-eng-support
+    Escalation: data-eng-oncall
+  mimeType: text/markdown
+
+# Notification Channels
+notificationChannels:
+  - type: email
+    displayName: "Engineering Team Email"
+    labels:
+      email_address: ${ALERT_EMAIL}
+    userLabels:
+      team: data-engineering
+    emailConfig:
+      severityMapping:
+        CRITICAL: team-leads@company.com
+        WARNING: engineering@company.com
+
+  - type: slack
+    displayName: "SRE Slack Channel"
+    labels:
+      channel_name: ${SLACK_CHANNEL}
+    userLabels:
+      team: sre
+    slackConfig:
+      severityMapping:
+        CRITICAL: "#sre-alerts-critical"
+        WARNING: "#sre-alerts-warning"
+
+# Alert Policies
+alertPolicies:
+  # Job Success Rate Alert
+  - displayName: "Scraping Job Success Rate Alert"
+    enabled: true
+    combiner: OR
+    conditions:
+      - displayName: "Job Success Rate Below SLO"
+        conditionThreshold:
+          filter: >
+            metric.type="custom.googleapis.com/scraping/job_success_rate"
+            resource.type="cloud_run_revision"
+          aggregations:
+            - alignmentPeriod: 300s
+              crossSeriesReducer: REDUCE_MEAN
+              perSeriesAligner: ALIGN_MEAN
+          comparison: COMPARISON_LT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 99.9
+    alertStrategy:
+      autoClose: 1800s
+      notificationRateLimit:
+        period: 900s
+    documentation:
+      content: |
+        # Job Success Rate Alert
+        Alert triggered when job success rate falls below SLO threshold of 99.9%.
+        
+        ## Impact
+        - Indicates potential systemic issues affecting scraping reliability
+        - May result in incomplete data collection
+        
+        ## Investigation
+        1. Check job failure logs in Cloud Logging
+        2. Verify target website availability
+        3. Review recent deployments or changes
+        
+        ## Runbook
+        https://wiki.example.com/runbooks/scraping/job-success-rate
+        
+        ## Auto-remediation
+        - System will attempt to restart failed jobs
+        - Resource scaling may be triggered automatically
+      mimeType: text/markdown
+    notificationChannels:
+      - email
+      - slack
+
+  # Error Rate Alert
+  - displayName: "Scraping Error Rate Alert"
+    enabled: true
+    combiner: OR
+    conditions:
+      - displayName: "Error Rate Exceeds Threshold"
+        conditionThreshold:
+          filter: >
+            metric.type="custom.googleapis.com/scraping/error_rate"
+            resource.type="cloud_run_revision"
+          aggregations:
+            - alignmentPeriod: 300s
+              crossSeriesReducer: REDUCE_MEAN
+              perSeriesAligner: ALIGN_MEAN
+          comparison: COMPARISON_GT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 0.001
+    alertStrategy:
+      autoClose: 600s
+      notificationRateLimit:
+        period: 600s
+    documentation:
+      content: |
+        # Error Rate Alert
+        Alert triggered when error rate exceeds 0.1% threshold.
+        
+        ## Impact
+        - High error rates indicate systemic issues
+        - May affect data quality and completeness
+        
+        ## Investigation
+        1. Review error logs and stack traces
+        2. Check for rate limiting or blocking
+        3. Verify network connectivity
+        
+        ## Runbook
+        https://wiki.example.com/runbooks/scraping/error-rate
+        
+        ## Auto-remediation
+        - Cache clearing may be triggered
+        - Circuit breaker may activate
+      mimeType: text/markdown
+    notificationChannels:
+      - email
+      - slack
+
+  # Job Processing Time Alert
+  - displayName: "Job Processing Time Alert"
+    enabled: true
+    combiner: OR
+    conditions:
+      - displayName: "Processing Time Exceeds Threshold"
+        conditionThreshold:
+          filter: >
+            metric.type="custom.googleapis.com/scraping/job_processing_time"
+            resource.type="cloud_run_revision"
+          aggregations:
+            - alignmentPeriod: 300s
+              crossSeriesReducer: REDUCE_MEAN
+              perSeriesAligner: ALIGN_MEAN
+          comparison: COMPARISON_GT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 120
+    alertStrategy:
+      autoClose: 900s
+      notificationRateLimit:
+        period: 900s
+    documentation:
+      content: |
+        # Job Processing Time Alert
+        Alert triggered when job processing time exceeds 2 minutes.
+        
+        ## Impact
+        - Indicates performance degradation
+        - May affect data freshness
+        
+        ## Investigation
+        1. Check resource utilization
+        2. Review concurrent job count
+        3. Verify target site response times
+        
+        ## Runbook
+        https://wiki.example.com/runbooks/scraping/processing-time
+        
+        ## Auto-remediation
+        - Additional resources may be allocated
+        - Job queue throttling may be adjusted
+      mimeType: text/markdown
+    notificationChannels:
+      - email
+
+# Incident Response Configuration
+incidentManagement:
+  acknowledgmentRequired: true
+  resolutionSLA: 7200s
+  postmortemRequired: true
+  autoRemediation:
+    enabled: true
+    actions:
+      - restart_failed_jobs
+      - scale_resources
+      - clear_cache
+
+# Labels
+labels:
+  service: web-scraping
+  team: data-engineering
+  environment: ${ENVIRONMENT}
+  criticality: high
