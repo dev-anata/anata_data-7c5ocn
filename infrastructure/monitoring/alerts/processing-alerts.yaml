@@ -1,0 +1,169 @@
+# Alert policy configurations for document processing service monitoring
+# Version: @google-cloud/monitoring ^3.0.0
+
+# Global settings
+displayName: "Document Processing Service Alerts"
+documentation:
+  content: |
+    Alert policies for monitoring document processing service performance, errors, and capacity.
+    Configured to track SLAs and notify appropriate teams based on severity.
+  mimeType: text/markdown
+userLabels:
+  service: document-processing
+  environment: production
+  team: processing
+
+# Alert Policies
+policies:
+  # Processing Time SLA Alert
+  - displayName: "Document Processing Time Alert"
+    documentation:
+      content: |
+        Processing time exceeded 2-minute SLA. Check system resources and processing queue.
+        
+        ## Troubleshooting Steps:
+        1. Check system resource utilization
+        2. Review processing queue length
+        3. Verify document sizes and complexity
+        4. Inspect processing service logs
+      mimeType: text/markdown
+    conditions:
+      - displayName: "Processing Time > 2 minutes"
+        conditionThreshold:
+          filter: >
+            metric.type="custom.googleapis.com/document/processing_time"
+            resource.type="cloud_run_revision"
+          aggregations:
+            - alignmentPeriod: 60s
+              crossSeriesReducer: REDUCE_MEAN
+              groupByFields:
+                - resource.label.instance_id
+                - resource.label.zone
+              perSeriesAligner: ALIGN_MEAN
+          comparison: COMPARISON_GT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 120  # 2 minutes in seconds
+    combiner: OR
+    alertStrategy:
+      autoClose: 7200s  # Auto-close after 2 hours if condition clears
+    notificationChannels:
+      - type: email
+        name: projects/${PROJECT_ID}/notificationChannels/${EMAIL_CHANNEL_ID}
+      - type: slack
+        name: projects/${PROJECT_ID}/notificationChannels/${SLACK_CHANNEL_ID}
+    severity: WARNING
+
+  # Processing Error Rate Alert
+  - displayName: "Document Processing Error Rate Alert"
+    documentation:
+      content: |
+        Critical error rate threshold exceeded. Immediate investigation required.
+        
+        ## Impact:
+        - Processing reliability compromised
+        - Potential data quality issues
+        - SLA breach risk
+        
+        ## Immediate Actions:
+        1. Review error logs
+        2. Check input document quality
+        3. Verify processing service health
+        4. Escalate to on-call engineer if unresolved
+      mimeType: text/markdown
+    conditions:
+      - displayName: "Error Rate > 0.1%"
+        conditionThreshold:
+          filter: >
+            metric.type="custom.googleapis.com/document/errors"
+            resource.type="cloud_run_revision"
+          aggregations:
+            - alignmentPeriod: 300s
+              crossSeriesReducer: REDUCE_COUNT
+              groupByFields:
+                - resource.label.instance_id
+                - metadata.user_labels.error_type
+              perSeriesAligner: ALIGN_RATE
+          comparison: COMPARISON_GT
+          duration: 300s
+          trigger:
+            count: 1
+          thresholdValue: 0.001  # 0.1% as decimal
+    combiner: OR
+    alertStrategy:
+      autoClose: 3600s  # Auto-close after 1 hour if condition clears
+      notificationRateLimit:
+        period: 300s  # Limit notifications to once every 5 minutes
+    notificationChannels:
+      - type: email
+        name: projects/${PROJECT_ID}/notificationChannels/${EMAIL_CHANNEL_ID}
+      - type: slack
+        name: projects/${PROJECT_ID}/notificationChannels/${SLACK_CHANNEL_ID}
+      - type: pagerduty
+        name: projects/${PROJECT_ID}/notificationChannels/${PAGERDUTY_CHANNEL_ID}
+    severity: CRITICAL
+
+  # Processing Throughput Alert
+  - displayName: "Document Processing Throughput Alert"
+    documentation:
+      content: |
+        Processing throughput below required capacity of 100 documents per hour.
+        
+        ## Potential Causes:
+        1. Resource constraints
+        2. Processing bottlenecks
+        3. Input queue issues
+        4. Service degradation
+      mimeType: text/markdown
+    conditions:
+      - displayName: "Throughput < 100 docs/hour"
+        conditionThreshold:
+          filter: >
+            metric.type="custom.googleapis.com/document/processing_throughput"
+            resource.type="cloud_run_revision"
+          aggregations:
+            - alignmentPeriod: 3600s
+              crossSeriesReducer: REDUCE_SUM
+              perSeriesAligner: ALIGN_RATE
+          comparison: COMPARISON_LT
+          duration: 900s  # 15 minutes of sustained low throughput
+          trigger:
+            count: 1
+          thresholdValue: 100
+    combiner: OR
+    alertStrategy:
+      autoClose: 7200s  # Auto-close after 2 hours if condition clears
+    notificationChannels:
+      - type: email
+        name: projects/${PROJECT_ID}/notificationChannels/${EMAIL_CHANNEL_ID}
+      - type: slack
+        name: projects/${PROJECT_ID}/notificationChannels/${SLACK_CHANNEL_ID}
+    severity: WARNING
+
+# Notification Channel Definitions
+notificationChannels:
+  - type: email
+    displayName: "Processing Team Email"
+    labels:
+      email_address: processing-team@company.com
+    userLabels:
+      team: processing
+      severity: warning
+
+  - type: slack
+    displayName: "Processing Team Slack"
+    labels:
+      channel_name: "#processing-alerts"
+      auth_token: ${SLACK_AUTH_TOKEN}
+    userLabels:
+      team: processing
+      severity: warning
+
+  - type: pagerduty
+    displayName: "Processing Team PagerDuty"
+    labels:
+      service_key: ${PAGERDUTY_SERVICE_KEY}
+    userLabels:
+      team: processing
+      severity: critical
